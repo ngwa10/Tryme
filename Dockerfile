@@ -30,7 +30,10 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
  && apt-get update \
  && apt-get install -y google-chrome-stable
 
-# Find Chrome version and install matching ChromeDriver
+# Find Chrome version and install matching ChromeDriver (always as dockuser to match VNC user)
+USER dockuser
+WORKDIR /home/dockuser
+
 RUN CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}') && \
     CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d '.' -f 1) && \
     echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)" && \
@@ -51,10 +54,7 @@ RUN which google-chrome-stable && google-chrome-stable --version && /usr/local/b
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
     git clone --depth 1 https://github.com/novnc/websockify.git /opt/noVNC/utils/websockify
 
-RUN useradd -m -s /bin/bash dockuser && \
-    echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-WORKDIR /home/dockuser
+# Create dockuser and set permissions (already running as dockuser, so no need to switch users again)
 RUN mkdir -p /home/dockuser/bot /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp && \
     chown -R dockuser:dockuser /home/dockuser /tmp
 
@@ -70,5 +70,4 @@ ENV XAUTHORITY=/home/dockuser/.Xauthority
 ENV HOME=/home/dockuser
 ENV PYTHONUNBUFFERED=1
 
-USER dockuser
 ENTRYPOINT ["/home/dockuser/bot/start.sh"]
