@@ -49,7 +49,22 @@ logger = logging.getLogger(__name__)
 os.environ['DISPLAY'] = ':1'
 os.environ['XAUTHORITY'] = '/home/dockuser/.Xauthority'  # Match VNC user
 
-# Try to import GUI automation libraries
+# Safety check: Warn if running as root (should be dockuser)
+try:
+    euid = os.geteuid()
+    login_user = os.getlogin()
+except Exception as exc:
+    euid = None
+    login_user = "unknown"
+if euid == 0:
+    logger.error("[❌] This script should NOT be run as root! Please run as 'dockuser'. Chrome will NOT be visible in VNC.")
+    sys.exit(1)
+else:
+    logger.info(f"[✅] Running as user: {login_user} (UID: {euid})")
+
+# =========================
+# GUI Automation Libraries
+# =========================
 try:
     import pyautogui
     pyautogui.FAILSAFE = True
@@ -60,7 +75,9 @@ except Exception as e:
     pyautogui = None
     logger.warning(f"[⚠️] pyautogui not available: {e}")
 
-# Try to import Telegram libraries
+# =========================
+# Telegram Libraries
+# =========================
 try:
     from telethon import TelegramClient, events
     telegram_available = True
@@ -69,7 +86,9 @@ except Exception as e:
     telegram_available = False
     logger.warning(f"[⚠️] Telegram libraries not available: {e}")
 
-# Try to import Selenium
+# =========================
+# Selenium Libraries
+# =========================
 try:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
