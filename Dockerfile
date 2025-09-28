@@ -1,5 +1,6 @@
 FROM ubuntu:22.04
 
+# Install system dependencies and XFCE desktop
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
@@ -32,6 +33,9 @@ RUN wget -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chro
     mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/chromedriver.zip /usr/local/bin/chromedriver-linux64
+
+# Check Chrome install
+RUN which google-chrome-stable && google-chrome-stable --version
 
 # noVNC
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
