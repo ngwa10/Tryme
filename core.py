@@ -82,6 +82,54 @@ except Exception as e:
     logger.warning(f"[⚠️] Selenium not available: {e}")
 
 # =========================
+# POCKET OPTION LOGIN FEATURE (NEW)
+# =========================
+def launch_pocketoption_and_autofill():
+    """Launch Chrome, navigate to Pocket Option login and autofill credentials."""
+    if not selenium_available:
+        logger.warning("[⚠️] Selenium not available, cannot auto-launch Pocket Option login.")
+        return
+    try:
+        chrome_options = Options()
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_argument("--user-data-dir=/home/dockuser/chrome-profile")
+        # NOT headless so you can interact
+        service = Service("/usr/local/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("[🌐] Chrome launched for Pocket Option login.")
+
+        # Go to the Pocket Option login page
+        driver.get("https://pocketoption.com/login")
+        logger.info("[🌐] Navigated to https://pocketoption.com/login")
+
+        # Wait for email and password fields to load
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+
+        wait = WebDriverWait(driver, 20)
+        email_input = wait.until(EC.presence_of_element_located((By.NAME, "email")))
+        password_input = wait.until(EC.presence_of_element_located((By.NAME, "password")))
+
+        # Autofill email and password
+        email_input.clear()
+        email_input.send_keys(EMAIL)
+        logger.info("[✍️] Email autofilled.")
+        password_input.clear()
+        password_input.send_keys(PASSWORD)
+        logger.info("[✍️] Password autofilled.")
+
+        logger.info("[⏸️] Please click the Login button manually in the opened Chrome window.")
+        # Do not click login, leave for user interaction
+
+    except Exception as e:
+        logger.error(f"[❌] Could not launch or autofill Pocket Option login: {e}")
+
+# =========================
 # Health Check Server
 # =========================
 class HealthHandler(BaseHTTPRequestHandler):
@@ -481,5 +529,9 @@ if __name__ == "__main__":
     except ImportError:
         logger.error("[❌] asyncio not available")
         sys.exit(1)
-        
+
+    # === CALL THE NEW FEATURE HERE ===
+    launch_pocketoption_and_autofill()
+    # ================================
+
     main()
