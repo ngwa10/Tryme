@@ -2,6 +2,8 @@
 set -e
 
 echo "🚀 Starting Pocket Option Trading Bot Container..."
+echo "Current user: $(whoami)"
+
 
 mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
 chmod 700 /home/dockuser/.vnc
