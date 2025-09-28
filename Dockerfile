@@ -1,5 +1,4 @@
 # Optimized Dockerfile for Zeabur deployment
-# Using python:3.11-slim-bullseye as it is a smaller, more focused base image for Python apps.
 FROM python:3.11-slim-bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -31,38 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver using the robust retry logic
-RUN CHROME_MAJOR_VERSION=$(google-chrome --version | sed 's/Google Chrome [^0-9]*//g' | cut -d'.' -f1) \
-    && for i in $(seq 1 5); do \
-        JSON_RESPONSE=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-json"); \
-        if echo "${JSON_RESPONSE}" | jq . >/dev/null 2>&1; then \
-            CHROMEDRIVER_VERSION=$(echo "${JSON_RESPONSE}" | jq -r '.channels.Stable.version'); \
-            if [ -n "$CHROMEDRIVER_VERSION" ] && [ "$CHROMEDRIVER_VERSION" != "null" ]; then \
-                echo "Found ChromeDriver version: $CHROMEDRIVER_VERSION. Attempting download."; \
-                wget -q -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip"; \
-                if [ -f /tmp/chromedriver.zip ]; then \
-                    echo "Download successful."; \
-                    unzip -q /tmp/chromedriver.zip -d /tmp/; \
-                    mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver; \
-                    chmod +x /usr/local/bin/chromedriver; \
-                    rm -rf /tmp/chromedriver.zip /tmp/chromedriver-linux64; \
-                    break; \
-                else \
-                    echo "Download failed. Retrying..."; \
-                fi; \
-            else \
-                echo "Failed to get ChromeDriver version from JSON. Retrying in 2 seconds..."; \
-                sleep 2; \
-            fi; \
-        else \
-            echo "curl did not return valid JSON. Retrying in 2 seconds..."; \
-            sleep 2; \
-        fi; \
-    done \
-    && if [ ! -f /usr/local/bin/chromedriver ]; then \
-        echo "Failed to install ChromeDriver after multiple retries. Exiting."; \
-        exit 1; \
-    fi
+# The unreliable ChromeDriver installation is REMOVED.
+# It will be handled by the Python script at runtime.
 
 # Install noVNC
 RUN git clone --depth 1 --branch v1.4.0 https://github.com/novnc/noVNC.git ${NO_VNC_HOME} \
