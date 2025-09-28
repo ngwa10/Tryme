@@ -9,19 +9,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NO_VNC_HOME=/opt/noVNC
 
 # Install system dependencies in stages to reduce build time
+# Combine apt-get commands to reduce image layers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
     gnupg2 \
     ca-certificates \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Add Chrome repository and install Chrome
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 
+# Install Chrome and jq (for parsing JSON)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     google-chrome-stable \
+    jq \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install minimal dependencies for VNC and automation
@@ -32,16 +37,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     procps \
     net-tools \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver
-RUN CHROME_VERSION=$(google-chrome --version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+") \
-    && DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%%.*}") \
-    && wget -q -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${DRIVER_VERSION}/chromedriver_linux64.zip" \
+# Install ChromeDriver using the new "Chrome for Testing" API
+RUN CHROME_MAJOR_VERSION=$(google-chrome --version | sed 's/Google Chrome [^0-9]*//g' | cut -d'.' -f1) \
+    && CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-json" | jq -r '.channels.Stable.version') \
+    && wget -q -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" \
     && unzip -q /tmp/chromedriver.zip -d /tmp/ \
-    && mv /tmp/chromedriver /usr/local/bin/chromedriver \
+    && mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
     && chmod +x /usr/local/bin/chromedriver \
-    && rm /tmp/chromedriver.zip
+    && rm -rf /tmp/chromedriver.zip /tmp/chromedriver-linux64
 
 # Install noVNC
 RUN git clone --depth 1 --branch v1.4.0 https://github.com/novnc/noVNC.git ${NO_VNC_HOME} \
