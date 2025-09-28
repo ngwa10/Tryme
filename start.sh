@@ -3,27 +3,23 @@ set -e
 
 echo "🚀 Starting Pocket Option Trading Bot Container..."
 
-# Create necessary directories
 mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
 chmod 700 /home/dockuser/.vnc
 
-# Robust xstartup for VNC/XFCE (minimal, recommended)
+# Minimal robust xstartup for XFCE
 cat > /home/dockuser/.vnc/xstartup << 'EOF'
 #!/bin/bash
-xrdb $HOME/.Xresources
-startxfce4 &
+export XKL_XMODMAP_DISABLE=1
+exec xfce4-session
 EOF
 chmod +x /home/dockuser/.vnc/xstartup
 
-# Create Xauthority file
 touch /home/dockuser/.Xauthority
 export XAUTHORITY=/home/dockuser/.Xauthority
 
 echo "🖥️  Starting VNC server..."
-# Add --I-KNOW-THIS-IS-INSECURE for TigerVNC >= 1.13, required for -localhost no and no password
 vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
 
-# Wait for VNC to start
 sleep 3
 
 echo "🌐 Starting noVNC web interface..."
@@ -31,7 +27,6 @@ cd /opt/noVNC
 /opt/noVNC/utils/websockify/run 6080 localhost:5901 --web /opt/noVNC &
 NOVNC_PID=$!
 
-# Wait for noVNC to start
 sleep 2
 
 echo "🌍 Starting Chrome browser..."
@@ -48,7 +43,6 @@ google-chrome-stable \
   "https://pocketoption.com/login" &
 CHROME_PID=$!
 
-# Wait for Chrome to start
 sleep 5
 
 echo "🤖 Starting Trading Bot..."
@@ -61,7 +55,6 @@ echo "📊 Access VNC interface: http://localhost:6080"
 echo "🏥 Health check: http://localhost:6081/health"
 echo "📝 Bot logs: tail -f /tmp/bot.log"
 
-# Function to cleanup on exit
 cleanup() {
     echo "🛑 Shutting down services..."
     kill $BOT_PID 2>/dev/null || true
@@ -71,8 +64,6 @@ cleanup() {
     echo "✅ Cleanup completed"
 }
 
-# Setup signal handlers
 trap cleanup SIGTERM SIGINT
 
-# Wait for any process to exit
 wait $BOT_PID
