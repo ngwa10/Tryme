@@ -22,12 +22,13 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-# Chrome install (pinned)
-RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_120.0.6099.71-1_amd64.deb && \
-    apt-get install -y /tmp/google-chrome.deb || apt-get -f install -y && \
-    rm /tmp/google-chrome.deb
+# Install Google Chrome via official repo (robust, works on all Ubuntu versions)
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+ && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+ && apt-get update \
+ && apt-get install -y google-chrome-stable
 
-# ChromeDriver install (pinned)
+# ChromeDriver install (pinned, or you can match with Chrome version if you wish)
 RUN wget -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/120.0.6099.71/linux64/chromedriver-linux64.zip" && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
