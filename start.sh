@@ -6,6 +6,7 @@ echo "Current user: $(whoami)"
 
 mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
 chmod 700 /home/dockuser/.vnc
+chown dockuser:dockuser /home/dockuser/chrome-profile /home/dockuser/.vnc /tmp
 
 # Minimal robust xstartup for XFCE
 cat > /home/dockuser/.vnc/xstartup << 'EOF'
@@ -16,6 +17,7 @@ EOF
 chmod +x /home/dockuser/.vnc/xstartup
 
 touch /home/dockuser/.Xauthority
+chown dockuser:dockuser /home/dockuser/.Xauthority
 export XAUTHORITY=/home/dockuser/.Xauthority
 export DISPLAY=:1
 
@@ -34,8 +36,9 @@ sleep 2
 # ---- Chrome direct launch ----
 echo "🌐 Starting Chrome for GUI login..."
 
-google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu \
+google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
   --user-data-dir=/home/dockuser/chrome-profile \
+  --no-first-run --no-default-browser-check \
   --start-maximized "https://pocketoption.com/login" &
 
 echo "✅ Chrome launched!"
