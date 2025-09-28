@@ -46,8 +46,7 @@ CHROME_PID=$!
 sleep 5
 
 echo "🤖 Starting Trading Bot..."
-cd /home/dockuser
-python3 core.py &
+python3 /home/dockuser/bot/core.py &
 BOT_PID=$!
 
 echo "✅ All services started successfully!"
