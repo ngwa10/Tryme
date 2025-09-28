@@ -293,6 +293,12 @@ RUN chmod +x /home/dockuser/bot/monitor.sh
 RUN cat > /home/dockuser/bot/README.md << 'EOF'
 # Pocket Option Telegram Trading Bot
 
+## i added this to monitor health 
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
+   RUN chmod +x /usr/local/bin/healthcheck.sh
+   HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=3 \
+       CMD /usr/local/bin/healthcheck.sh
+
 ## Quick Start
 
 ### Using Docker (Recommended)
