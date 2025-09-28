@@ -30,15 +30,22 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
  && apt-get update \
  && apt-get install -y google-chrome-stable
 
-# ChromeDriver install (pinned, or you can match with Chrome version if you wish)
-RUN wget -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/120.0.6099.71/linux64/chromedriver-linux64.zip" && \
+# Find Chrome version and install matching ChromeDriver
+RUN CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}') && \
+    CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d '.' -f 1) && \
+    echo "Detected Chrome version: $CHROME_VERSION (Major: $CHROME_MAJOR_VERSION)" && \
+    DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip" && \
+    wget -O /tmp/chromedriver.zip "$DRIVER_URL" || \
+    (echo "Falling back to latest for major version"; \
+     DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_MAJOR_VERSION.0.0.0/linux64/chromedriver-linux64.zip"; \
+     wget -O /tmp/chromedriver.zip "$DRIVER_URL") && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/chromedriver.zip /usr/local/bin/chromedriver-linux64
 
 # Check Chrome install
-RUN which google-chrome-stable && google-chrome-stable --version
+RUN which google-chrome-stable && google-chrome-stable --version && /usr/local/bin/chromedriver --version
 
 # noVNC
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
