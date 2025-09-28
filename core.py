@@ -46,8 +46,8 @@ logger = logging.getLogger(__name__)
 # =========================
 # Display and GUI Setup
 # =========================
-os.environ.setdefault('DISPLAY', ':1')
-os.environ['XAUTHORITY'] = '/home/dockuser/.Xauthority'  # Fixed to match VNC user
+os.environ['DISPLAY'] = ':1'
+os.environ['XAUTHORITY'] = '/home/dockuser/.Xauthority'  # Match VNC user
 
 # Try to import GUI automation libraries
 try:
@@ -98,7 +98,6 @@ def launch_pocketoption_and_autofill():
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         chrome_options.add_argument("--user-data-dir=/home/dockuser/chrome-profile")
-        # NOT headless so you can interact
         service = Service("/usr/local/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=chrome_options)
         logger.info("[🌐] Chrome launched for Pocket Option login.")
@@ -123,7 +122,6 @@ def launch_pocketoption_and_autofill():
         password_input.send_keys(PASSWORD)
         logger.info("[✍️] Password autofilled.")
 
-        logger.info("[⏸️] Please click the Login button manually in the opened Chrome window.")
         # Optionally, click login automatically:
         try:
             login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
