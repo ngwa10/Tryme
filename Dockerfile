@@ -5,7 +5,7 @@
 
 FROM ubuntu:22.04
 
-# 1. Install system and X11/VNC dependencies
+# 1. Install system and X11/VNC dependencies (ADDED: tigervnc-standalone-server tigervnc-common)
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y \
@@ -16,6 +16,7 @@ RUN apt-get update && \
     net-tools lsof procps \
     supervisor \
     git \
+    tigervnc-standalone-server tigervnc-common \
     libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
     libgbm1 libu2f-udev fonts-liberation libappindicator3-1 \
     libxrandr2 libxdamage1 libxcomposite1 libxcursor1 libxinerama1 \
