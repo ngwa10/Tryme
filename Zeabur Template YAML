@@ -1,0 +1,43 @@
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: vnc-chrome-pocket
+spec:
+  description: "VNC + Chrome container preloaded for Pocket login"
+  variables:
+    - key: VNC_PASSWORD
+      type: STRING
+      name: "VNC Password"
+      description: "Password for VNC / noVNC access"
+    - key: DOMAIN
+      type: DOMAIN
+      name: "Domain for noVNC interface"
+      description: "Domain mapping to the noVNC HTTP port"
+  services:
+    - name: vnc-chrome
+      template: PREBUILT
+      spec:
+        source:
+          image: your-registry/vnc-chrome-pocket:latest
+        ports:
+          - id: vnc
+            port: 5901
+            type: TCP
+          - id: web
+            port: 6080
+            type: HTTP
+        env:
+          VNC_PASSWORD:
+            default: "change_me"
+            expose: false
+        domainKey: DOMAIN
+        volumes:
+          - id: chrome-profile
+            dir: /home/dockuser/chrome-profile
+        instructions:
+          - type: TEXT
+            title: "Connect via noVNC"
+            content: "Visit `https://${DOMAIN}` in browser to access the noVNC UI"
+          - type: TEXT
+            title: "Connect via VNC client"
+            content: "Connect via VNC client to the TCP endpoint for port 5901"
