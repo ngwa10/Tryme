@@ -1,80 +1,83 @@
-#!/bin/bash
-set -e
+# ===========================================
+# Pocket Option Telegram Trading Bot Dockerfile
+# Zeabur/Cloud-optimized, Chrome+ChromeDriver pinned for reliability
+# Includes locale fix, robust XFCE install, and insecure VNC flag for TigerVNC
+# ===========================================
 
-echo "🚀 Starting Pocket Option Trading Bot Container..."
+FROM ubuntu:22.04
 
-# Create necessary directories
-mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
-chmod 700 /home/dockuser/.vnc
+# 1. Install system and X11/VNC dependencies (including everything needed for XFCE and fallback XTerm)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y \
+    python3 python3-pip python3-setuptools python3-venv \
+    xvfb xfce4 xfce4-session xterm xfce4-terminal dbus-x11 x11-xkb-utils x11-utils \
+    xfonts-base xfonts-scalable xfonts-100dpi xfonts-75dpi \
+    wget curl ca-certificates \
+    net-tools lsof procps \
+    supervisor \
+    git \
+    tigervnc-standalone-server tigervnc-common \
+    locales \
+    libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+    libgbm1 libu2f-udev fonts-liberation libappindicator3-1 \
+    libxrandr2 libxdamage1 libxcomposite1 libxcursor1 libxinerama1 \
+    libxext6 libxfixes3 libpango-1.0-0 libpangocairo-1.0-0 \
+    libatspi2.0-0 libdrm2 libx11-xcb1 \
+    unzip \
+    xauth \
+    && apt-get clean
 
-# Create xstartup for VNC
-cat > /home/dockuser/.vnc/xstartup << 'EOF'
-#!/bin/bash
-export XKL_XMODMAP_DISABLE=1
-export DISPLAY=:1
-unset SESSION_MANAGER
-exec startxfce4 &
-EOF
-chmod +x /home/dockuser/.vnc/xstartup
+# 2. Fix locale warning
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
-# Create Xauthority file
-touch /home/dockuser/.Xauthority
-export XAUTHORITY=/home/dockuser/.Xauthority
+# 3. Install Google Chrome (pinned version for driver compatibility)
+RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_120.0.6099.71-1_amd64.deb && \
+    apt-get install -y /tmp/google-chrome.deb || apt-get -f install -y && \
+    rm /tmp/google-chrome.deb
 
-echo "🖥️  Starting VNC server..."
-# Fix: Add --I-KNOW-THIS-IS-INSECURE for TigerVNC >= 1.13, required for -localhost no and no password
-vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
+# 4. Install ChromeDriver (version 120 to match Chrome 120)
+RUN wget -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/120.0.6099.71/linux64/chromedriver-linux64.zip" && \
+    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
+    mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
+    chmod +x /usr/local/bin/chromedriver && \
+    rm -rf /tmp/chromedriver.zip /usr/local/bin/chromedriver-linux64
 
-# Wait for VNC to start
-sleep 3
+# 5. Install noVNC and websockify
+RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
+    git clone --depth 1 https://github.com/novnc/websockify.git /opt/noVNC/utils/websockify
 
-echo "🌐 Starting noVNC web interface..."
-cd /opt/noVNC
-/opt/noVNC/utils/websockify/run 6080 localhost:5901 --web /opt/noVNC &
-NOVNC_PID=$!
+# 6. Add the non-root user
+RUN useradd -m -s /bin/bash dockuser && \
+    echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Wait for noVNC to start
-sleep 2
+# 7. Set up directories, permissions
+WORKDIR /home/dockuser
+RUN mkdir -p /home/dockuser/bot /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp && \
+    chown -R dockuser:dockuser /home/dockuser /tmp
 
-echo "🌍 Starting Chrome browser..."
-export DISPLAY=:1
-google-chrome-stable \
-  --no-sandbox \
-  --disable-dev-shm-usage \
-  --disable-gpu \
-  --user-data-dir=/home/dockuser/chrome-profile \
-  --start-maximized \
-  --disable-blink-features=AutomationControlled \
-  --disable-web-security \
-  --allow-running-insecure-content \
-  "https://pocketoption.com/login" &
-CHROME_PID=$!
+# 8. Copy bot code into image
+COPY --chown=dockuser:dockuser core.py selenium_integration.py telegram_integration.py healthcheck.sh start.sh requirements.txt /home/dockuser/bot/
+RUN chmod +x /home/dockuser/bot/healthcheck.sh /home/dockuser/bot/start.sh
 
-# Wait for Chrome to start
-sleep 5
+# 9. Install Python dependencies
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install --no-cache-dir -r /home/dockuser/bot/requirements.txt
 
-echo "🤖 Starting Trading Bot..."
-cd /home/dockuser
-python3 core.py &
-BOT_PID=$!
+# 10. Expose required ports (for Zeabur to map)
+EXPOSE 6080 6081
 
-echo "✅ All services started successfully!"
-echo "📊 Access VNC interface: http://localhost:6080"
-echo "🏥 Health check: http://localhost:6081/health"
-echo "📝 Bot logs: tail -f /tmp/bot.log"
+# 11. Set environment variables
+ENV DISPLAY=:1
+ENV XAUTHORITY=/home/dockuser/.Xauthority
+ENV HOME=/home/dockuser
+ENV PYTHONUNBUFFERED=1
 
-# Function to cleanup on exit
-cleanup() {
-    echo "🛑 Shutting down services..."
-    kill $BOT_PID 2>/dev/null || true
-    kill $CHROME_PID 2>/dev/null || true
-    kill $NOVNC_PID 2>/dev/null || true
-    vncserver -kill :1 2>/dev/null || true
-    echo "✅ Cleanup completed"
-}
+# 12. Run as non-root user
+USER dockuser
 
-# Setup signal handlers
-trap cleanup SIGTERM SIGINT
-
-# Wait for any process to exit
-wait $BOT_PID
+# 13. Entrypoint (starts VNC, noVNC, Chrome, your bot)
+ENTRYPOINT ["/home/dockuser/bot/start.sh"]
