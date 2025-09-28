@@ -87,72 +87,6 @@ except Exception as e:
     logger.warning(f"[⚠️] Telegram libraries not available: {e}")
 
 # =========================
-# Selenium Libraries
-# =========================
-try:
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service
-    from selenium.webdriver.common.by import By
-    selenium_available = True
-    logger.info("[✅] Selenium libraries loaded")
-except Exception as e:
-    selenium_available = False
-    logger.warning(f"[⚠️] Selenium not available: {e}")
-
-# =========================
-# POCKET OPTION LOGIN FEATURE (NEW)
-# =========================
-def launch_pocketoption_and_autofill():
-    """Launch Chrome, navigate to Pocket Option login and autofill credentials."""
-    if not selenium_available:
-        logger.warning("[⚠️] Selenium not available, cannot auto-launch Pocket Option login.")
-        return
-    try:
-        chrome_options = Options()
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--start-maximized")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
-        chrome_options.add_argument("--user-data-dir=/home/dockuser/chrome-profile")
-        service = Service("/usr/local/bin/chromedriver")
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        logger.info("[🌐] Chrome launched for Pocket Option login.")
-
-        # Go to the Pocket Option login page
-        driver.get("https://pocketoption.com/login")
-        logger.info("[🌐] Navigated to https://pocketoption.com/login")
-
-        # Wait for email and password fields to load
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-
-        wait = WebDriverWait(driver, 20)
-        email_input = wait.until(EC.presence_of_element_located((By.NAME, "email")))
-        password_input = wait.until(EC.presence_of_element_located((By.NAME, "password")))
-
-        # Autofill email and password
-        email_input.clear()
-        email_input.send_keys(EMAIL)
-        logger.info("[✍️] Email autofilled.")
-        password_input.clear()
-        password_input.send_keys(PASSWORD)
-        logger.info("[✍️] Password autofilled.")
-
-        # Optionally, click login automatically:
-        try:
-            login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
-            login_button.click()
-            logger.info("[👉] Login button clicked automatically.")
-        except Exception as e:
-            logger.warning(f"[⚠️] Could not click login automatically: {e}")
-
-    except Exception as e:
-        logger.error(f"[❌] Error launching Pocket Option Chrome: {e}")
-
-# =========================
 # TRADING LOGIC PLACEHOLDER
 # =========================
 def trading_loop():
@@ -210,16 +144,13 @@ def start_health_server():
 def main():
     logger.info("Starting Pocket Option Trading Bot...")
 
-    # 1. Launch Chrome & autofill login via Selenium
-    launch_pocketoption_and_autofill()
-
-    # 2. Start health server (background)
+    # 1. Start health server (background)
     start_health_server()
 
-    # 3. Start Telegram listener (background)
+    # 2. Start Telegram listener (background)
     threading.Thread(target=start_telegram_listener, args=(signal_callback, command_callback), daemon=True).start()
 
-    # 4. Start trading logic (main thread)
+    # 3. Start trading logic (main thread)
     trading_loop()
 
 if __name__ == "__main__":
