@@ -1,8 +1,8 @@
+
 #!/bin/bash
 set -e
 
 # Read environment variables
-VNC_PASS=${VNC_PASSWORD:-password}
 VNC_RESOLUTION=${VNC_RESOLUTION:-1280x800}
 NO_VNC_HOME=/opt/noVNC
 DISPLAY_NUM=${DISPLAY#:}   # Extracts "1" from ":1"
@@ -10,11 +10,6 @@ DISPLAY_NUM=${DISPLAY#:}   # Extracts "1" from ":1"
 # Prepare .vnc directory
 mkdir -p /home/dockuser/.vnc
 chmod 700 /home/dockuser/.vnc
-
-# Set VNC password
-echo "Configuring VNC password..."
-printf "%s\n" "$VNC_PASS" "$VNC_PASS" | vncpasswd -f > /home/dockuser/.vnc/passwd
-chmod 600 /home/dockuser/.vnc/passwd
 
 # Create xstartup file for XFCE session
 echo "Creating xstartup script..."
@@ -29,9 +24,9 @@ chmod +x /home/dockuser/.vnc/xstartup
 echo "Cleaning up old VNC sessions..."
 vncserver -kill :${DISPLAY_NUM} >/dev/null 2>&1 || true
 
-# Start VNC server
-echo "Starting VNC server on display :${DISPLAY_NUM} with resolution ${VNC_RESOLUTION}..."
-vncserver :${DISPLAY_NUM} -geometry ${VNC_RESOLUTION} -depth 24
+# Start VNC server without password
+echo "Starting VNC server on display :${DISPLAY_NUM} with resolution ${VNC_RESOLUTION} (no password)..."
+vncserver :${DISPLAY_NUM} -geometry ${VNC_RESOLUTION} -depth 24 -SecurityTypes None
 
 export DISPLAY=:${DISPLAY_NUM}
 
