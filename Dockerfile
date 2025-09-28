@@ -3,14 +3,15 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:1 \
     VNC_RESOLUTION=1280x800 \
-    NO_VNC_HOME=/opt/noVNC
+    NO_VNC_HOME=/opt/noVNC \
+    PATH="/usr/bin:$PATH"
 
 # Install required packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xfce4 xfce4-terminal \
     dbus-x11 x11-xserver-utils \
     wget curl ca-certificates gnupg2 \
-    tigervnc-standalone-server tigervnc-common \
+    tigervnc-standalone-server tigervnc-common tigervnc-tools \
     python3 python3-pip python3-setuptools \
     git net-tools socat supervisor \
     xterm \
