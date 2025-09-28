@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server tigervnc-common tigervnc-tools \
     python3 python3-pip python3-setuptools \
     git net-tools socat supervisor \
-    xterm \
+    xterm dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
@@ -34,9 +34,11 @@ RUN useradd -m -s /bin/bash dockuser && \
 
 WORKDIR /home/dockuser
 
-# Copy start script
+# Copy and fix start script
 COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh && chown dockuser:dockuser /usr/local/bin/start.sh
+RUN dos2unix /usr/local/bin/start.sh && \
+    chmod +x /usr/local/bin/start.sh && \
+    chown dockuser:dockuser /usr/local/bin/start.sh
 
 EXPOSE 5901 6080
 
