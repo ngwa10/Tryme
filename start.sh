@@ -1,48 +1,37 @@
-
 #!/bin/bash
 set -e
 
-# Read environment variables
-VNC_RESOLUTION=${VNC_RESOLUTION:-1280x800}
-NO_VNC_HOME=/opt/noVNC
-DISPLAY_NUM=${DISPLAY#:}   # Extracts "1" from ":1"
-
-# Prepare .vnc directory
-mkdir -p /home/dockuser/.vnc
+# Setup
+mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile
 chmod 700 /home/dockuser/.vnc
 
-# Create xstartup file for XFCE session
-echo "Creating xstartup script..."
-cat > /home/dockuser/.vnc/xstartup << 'XSTART'
+# Create xstartup
+cat > /home/dockuser/.vnc/xstartup << 'EOF'
 #!/bin/bash
-xrdb $HOME/.Xresources >/dev/null 2>&1
-startxfce4 &
-XSTART
+export XKL_XMODMAP_DISABLE=1
+exec startxfce4
+EOF
 chmod +x /home/dockuser/.vnc/xstartup
 
-# Kill any existing VNC server
-echo "Cleaning up old VNC sessions..."
-vncserver -kill :${DISPLAY_NUM} >/dev/null 2>&1 || true
+# Start VNC
+echo "Starting VNC server..."
+vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None
 
-# Start VNC server without password
-echo "Starting VNC server on display :${DISPLAY_NUM} with resolution ${VNC_RESOLUTION} (no password)..."
-vncserver :${DISPLAY_NUM} -geometry ${VNC_RESOLUTION} -depth 24 -SecurityTypes None
+# Start noVNC
+echo "Starting noVNC..."
+cd /opt/noVNC
+/opt/noVNC/utils/websockify/run 6080 localhost:5901 --web /opt/noVNC &
 
-export DISPLAY=:${DISPLAY_NUM}
+# Wait for desktop
+sleep 5
 
-# Wait for display to initialize
-sleep 2
+# Start Chrome
+echo "Starting Chrome..."
+export DISPLAY=:1
+google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu \
+  --user-data-dir=/home/dockuser/chrome-profile \
+  --start-maximized "https://pocketoption.com/login" &
 
-# Launch Chrome to Pocket Option login page
-echo "Launching Chrome to Pocket Option login..."
-CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage --user-data-dir=/home/dockuser/chrome-profile --start-maximized"
-google-chrome-stable ${CHROME_FLAGS} "https://pocketoption.com/login" >/dev/null 2>&1 &
-
-# Start noVNC (websockify) to expose VNC over HTTP
-echo "Starting noVNC on port 6080..."
-cd ${NO_VNC_HOME}
-${NO_VNC_HOME}/utils/websockify/run 6080 localhost:5901 --web ${NO_VNC_HOME} --idle-timeout=0 &
-
-# Keep container running by tailing VNC logs
-echo "Container is running. Tailing VNC logs..."
-tail -F /home/dockuser/.vnc/*.log
+# Keep running
+echo "All services started. Container ready!"
+tail -f /dev/null
