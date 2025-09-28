@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xterm \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome (modern key handling)
+# Install Google Chrome
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg && \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
       > /etc/apt/sources.list.d/google-chrome.list && \
