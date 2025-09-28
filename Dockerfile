@@ -33,7 +33,6 @@ RUN git clone https://github.com/novnc/noVNC.git ${NO_VNC_HOME} && \
 RUN useradd -m -s /bin/bash dockuser && \
     mkdir -p /home/dockuser/.vnc && chown -R dockuser:dockuser /home/dockuser
 #add my owns
-bash
 RUN apt install -y tigervnc-common
 
 WORKDIR /home/dockuser
