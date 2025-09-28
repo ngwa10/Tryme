@@ -24,7 +24,7 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-# Install Google Chrome via official repo (robust, works on all Ubuntu versions)
+# Install Google Chrome via official repo
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
  && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
  && apt-get update \
@@ -51,7 +51,7 @@ RUN which google-chrome-stable && google-chrome-stable --version && /usr/local/b
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
     git clone --depth 1 https://github.com/novnc/websockify.git /opt/noVNC/utils/websockify
 
-# Create dockuser (must happen before USER dockuser!)
+# Create dockuser
 RUN useradd -m -s /bin/bash dockuser && \
     echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
