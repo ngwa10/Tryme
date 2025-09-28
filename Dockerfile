@@ -15,6 +15,7 @@ RUN apt-get update && \
     libxext6 libxfixes3 libpango-1.0-0 libpangocairo-1.0-0 \
     libatspi2.0-0 libdrm2 libx11-xcb1 \
     supervisor net-tools lsof procps xfonts-base xfonts-scalable xfonts-100dpi xfonts-75dpi \
+    python3-tk python3-dev \
     && apt-get clean
 
 # Locale fix
