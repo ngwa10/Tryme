@@ -29,25 +29,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install minimal dependencies for VNC and automation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    xvfb \
-    x11vnc \
-    fluxbox \
-    git \
-    procps \
-    net-tools \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install ChromeDriver using the new "Chrome for Testing" API
+# Install ChromeDriver using the new "Chrome for Testing" API with a retry loop
 RUN CHROME_MAJOR_VERSION=$(google-chrome --version | sed 's/Google Chrome [^0-9]*//g' | cut -d'.' -f1) \
-    && CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-json" | jq -r '.channels.Stable.version') \
-    && wget -q -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" \
-    && unzip -q /tmp/chromedriver.zip -d /tmp/ \
-    && mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
-    && chmod +x /usr/local/bin/chromedriver \
-    && rm -rf /tmp/chromedriver.zip /tmp/chromedriver-linux64
+    && for i in $(seq 1 5); do \
+        CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-json" | jq -r '.channels.Stable.version'); \
+        if [ -n "$CHROMEDRIVER_VERSION" ] && [ "$CHROMEDRIVER_VERSION" != "null" ]; then \
+            echo "Found ChromeDriver version: $CHROMEDRIVER_VERSION. Attempting download."; \
+            wget -q -O /tmp/chromedriver.zip "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip"; \
+            if [ -f /tmp/chromedriver.zip ]; then \
+                echo "Download successful."; \
+                unzip -q /tmp/chromedriver.zip -d /tmp/; \
+                mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver; \
+                chmod +x /usr/local/bin/chromedriver; \
+                rm -rf /tmp/chromedriver.zip /tmp/chromedriver-linux64; \
+                break; \
+            else \
+                echo "Download failed. Retrying..."; \
+            fi; \
+        else \
+            echo "Failed to get ChromeDriver version. Retrying in 2 seconds..."; \
+            sleep 2; \
+        fi; \
+    done \
+    && if [ ! -f /usr/local/bin/chromedriver ]; then \
+        echo "Failed to install ChromeDriver after multiple retries. Exiting."; \
+        exit 1; \
+    fi
 
 # Install noVNC
 RUN git clone --depth 1 --branch v1.4.0 https://github.com/novnc/noVNC.git ${NO_VNC_HOME} \
