@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-# Install system dependencies and XFCE desktop
+# Install system dependencies, XFCE, and gnupg for Chrome key
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
@@ -8,6 +8,7 @@ RUN apt-get update && \
     xvfb xfce4 xfce4-session xterm dbus-x11 x11-xkb-utils x11-utils \
     tigervnc-standalone-server tigervnc-common \
     wget curl ca-certificates git locales unzip xauth \
+    gnupg \
     libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
     libgbm1 libu2f-udev fonts-liberation libappindicator3-1 \
     libxrandr2 libxdamage1 libxcomposite1 libxcursor1 libxinerama1 \
