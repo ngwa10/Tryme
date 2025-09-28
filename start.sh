@@ -4,9 +4,10 @@ set -e
 echo "🚀 Starting Pocket Option Trading Bot Container..."
 echo "Current user: $(whoami)"
 
+# Create necessary directories
 mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
 chmod 700 /home/dockuser/.vnc
-chown dockuser:dockuser /home/dockuser/chrome-profile /home/dockuser/.vnc /tmp
+chown dockuser:dockuser /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp
 
 # Minimal robust xstartup for XFCE
 cat > /home/dockuser/.vnc/xstartup << 'EOF'
@@ -16,6 +17,7 @@ exec xfce4-session
 EOF
 chmod +x /home/dockuser/.vnc/xstartup
 
+# Set up X11 environment
 touch /home/dockuser/.Xauthority
 chown dockuser:dockuser /home/dockuser/.Xauthority
 export XAUTHORITY=/home/dockuser/.Xauthority
@@ -23,27 +25,29 @@ export DISPLAY=:1
 
 echo "🖥️  Starting VNC server..."
 vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
-
 sleep 3
 
 echo "🌐 Starting noVNC web interface..."
 cd /opt/noVNC
 /opt/noVNC/utils/websockify/run 6080 localhost:5901 --web /opt/noVNC &
 NOVNC_PID=$!
-
 sleep 2
 
-# ---- Chrome direct launch ----
-echo "🌐 Starting Chrome for GUI login..."
+# 🧹 Clean up any leftover Chrome lock files
+rm -f /home/dockuser/chrome-profile/SingletonLock
+rm -f /home/dockuser/chrome-profile/SingletonSocket
 
+# 🌐 Launch Chrome
+echo "🌐 Starting Chrome for GUI login..."
 google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
-  --user-data-dir=/home/dockuser/chrome-profile \
+  --enable-logging --v=1 \
+  --user-data-dir=/home/dockuser/chrome-profile --profile-directory="Profile 1" \
   --no-first-run --no-default-browser-check \
   --start-maximized "https://pocketoption.com/login" &
-
 echo "✅ Chrome launched!"
 echo "📊 Access VNC interface: http://localhost:6080"
 
+# 🤖 Launch Trading Bot
 echo "🤖 Starting Trading Bot..."
 python3 /home/dockuser/bot/core.py &
 BOT_PID=$!
@@ -51,6 +55,7 @@ BOT_PID=$!
 echo "🏥 Health check: http://localhost:6081/health"
 echo "📝 Bot logs: tail -f /tmp/bot.log"
 
+# Graceful shutdown handler
 cleanup() {
     echo "🛑 Shutting down services..."
     kill $BOT_PID 2>/dev/null || true
