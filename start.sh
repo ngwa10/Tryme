@@ -22,7 +22,8 @@ touch /home/dockuser/.Xauthority
 export XAUTHORITY=/home/dockuser/.Xauthority
 
 echo "🖥️  Starting VNC server..."
-vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no
+# Fix: Add --I-KNOW-THIS-IS-INSECURE for TigerVNC >= 1.13, required for -localhost no and no password
+vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
 
 # Wait for VNC to start
 sleep 3
