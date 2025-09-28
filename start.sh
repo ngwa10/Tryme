@@ -16,6 +16,7 @@ chmod +x /home/dockuser/.vnc/xstartup
 
 touch /home/dockuser/.Xauthority
 export XAUTHORITY=/home/dockuser/.Xauthority
+export DISPLAY=:1
 
 echo "🖥️  Starting VNC server..."
 vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
@@ -29,22 +30,6 @@ NOVNC_PID=$!
 
 sleep 2
 
-echo "🌍 Starting Chrome browser..."
-export DISPLAY=:1
-google-chrome-stable \
-  --no-sandbox \
-  --disable-dev-shm-usage \
-  --disable-gpu \
-  --user-data-dir=/home/dockuser/chrome-profile \
-  --start-maximized \
-  --disable-blink-features=AutomationControlled \
-  --disable-web-security \
-  --allow-running-insecure-content \
-  "https://pocketoption.com/login" &
-CHROME_PID=$!
-
-sleep 5
-
 echo "🤖 Starting Trading Bot..."
 python3 /home/dockuser/bot/core.py &
 BOT_PID=$!
@@ -57,7 +42,6 @@ echo "📝 Bot logs: tail -f /tmp/bot.log"
 cleanup() {
     echo "🛑 Shutting down services..."
     kill $BOT_PID 2>/dev/null || true
-    kill $CHROME_PID 2>/dev/null || true
     kill $NOVNC_PID 2>/dev/null || true
     vncserver -kill :1 2>/dev/null || true
     echo "✅ Cleanup completed"
