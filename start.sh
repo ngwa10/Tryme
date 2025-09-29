@@ -8,13 +8,8 @@ export DISPLAY=:1
 export XAUTHORITY=/home/dockuser/.Xauthority
 
 # Create necessary directories
-mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /home/dockuser/.local/share/applications /tmp /run/dbus /tmp/crashpad
+mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp /run/dbus /tmp/crashpad
 chmod 700 /home/dockuser/.vnc
-chown -R dockuser:dockuser /home/dockuser/.vnc /home/dockuser/chrome-profile /home/dockuser/.local /tmp /run/dbus /tmp/crashpad
-
-# Create dummy DBus socket to suppress Chrome errors
-touch /run/dbus/system_bus_socket
-chmod 666 /run/dbus/system_bus_socket
 
 # Minimal robust xstartup for XFCE
 cat > /home/dockuser/.vnc/xstartup << 'EOF'
@@ -45,13 +40,12 @@ cd /opt/noVNC
 NOVNC_PID=$!
 sleep 2
 
-# Launch Chrome
-google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
-  --user-data-dir=/home/dockuser/chrome-profile --profile-directory='Profile 1' \
+# Launch Chromium (works as root with --no-sandbox)
+chromium-browser --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
+  --user-data-dir=/home/dockuser/chrome-profile \
   --no-first-run --no-default-browser-check \
-  --disable-features=OutOfBlinkOOMKill,Crashpad,UseDBus \
   --kiosk 'https://pocketoption.com/login' &
-echo "✅ Chrome launched!"
+echo "✅ Chromium launched!"
 
 # Launch Trading Bot
 python3 /home/dockuser/bot/core.py &
