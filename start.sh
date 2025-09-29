@@ -15,7 +15,7 @@ chmod 700 /home/dockuser/.vnc
 cat > /home/dockuser/.vnc/xstartup << 'EOF'
 #!/bin/bash
 export XKL_XMODMAP_DISABLE=1
-exec xfce4-session
+exec startxfce4
 EOF
 chmod +x /home/dockuser/.vnc/xstartup
 
@@ -23,7 +23,8 @@ chmod +x /home/dockuser/.vnc/xstartup
 touch /home/dockuser/.Xauthority
 
 echo "🖥️  Starting VNC server..."
-vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
+vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no
+
 sleep 3
 
 # Wait for X to be ready
@@ -40,12 +41,12 @@ cd /opt/noVNC
 NOVNC_PID=$!
 sleep 2
 
-# Launch Chromium (works as root with --no-sandbox)
-chromium-browser --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
+# Launch Chrome (official, as non-root, with your flags)
+google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
   --user-data-dir=/home/dockuser/chrome-profile \
   --no-first-run --no-default-browser-check \
   --kiosk 'https://pocketoption.com/login' &
-echo "✅ Chromium launched!"
+echo "✅ Chrome launched!"
 
 # Launch Trading Bot
 python3 /home/dockuser/bot/core.py &
