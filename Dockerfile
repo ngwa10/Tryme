@@ -1,6 +1,5 @@
 FROM ubuntu:latest
 
-# Install tightvncserver and basic desktop environment
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     tightvncserver \
@@ -15,8 +14,11 @@ RUN apt-get update && \
 RUN echo '#!/bin/bash\nxrdb $HOME/.Xresources\nstartxfce4 &' > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
 
-# Expose VNC port
+# Copy your start.sh script into the image
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 5901
 
-# Start VNC server on container start, with no authentication (INSECURE!)
-CMD ["vncserver", ":1", "--I-KNOW-THIS-IS-INSECURE", "-geometry", "1280x800", "-depth", "24"]
+# Start your custom script on container start
+CMD ["/start.sh"]
