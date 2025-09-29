@@ -15,7 +15,7 @@ RUN apt-get update && \
   libatspi2.0-0 libdrm2 libx11-xcb1 \
   supervisor net-tools lsof procps \
   xfonts-base xfonts-scalable xfonts-100dpi xfonts-75dpi \
-  python3-tk python3-dev && \
+  python3-tk python3-dev dbus && \
   apt-get clean
 
 # Locale fix
@@ -34,7 +34,10 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN useradd -m -s /bin/bash dockuser && \
   echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Now do user-specific setup
+# Generate machine-id for Chrome and DBus
+RUN dbus-uuidgen > /etc/machine-id
+
+# User-specific setup for XFCE and Chrome
 RUN mkdir -p /home/dockuser/.local/share/applications/ && \
     cp /usr/share/applications/google-chrome.desktop /home/dockuser/.local/share/applications/ && \
     chown dockuser:dockuser /home/dockuser/.local/share/applications/google-chrome.desktop
