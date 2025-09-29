@@ -43,13 +43,13 @@ rm -f /home/dockuser/chrome-profile/SingletonSocket
 
 # 🌐 Launch Chrome as non-root in kiosk mode
 echo "🌐 Starting Chrome for GUI login..."
-su dockuser -c "google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
+google-chrome-stable --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer \
   --enable-logging --v=1 \
   --user-data-dir=/home/dockuser/chrome-profile --profile-directory='Profile 1' \
   --no-first-run --no-default-browser-check \
   --disable-features=OutOfBlinkOOMKill,Crashpad,UseDBus \
   --crashpad-handler-pid=0 --crashpad-handler --database=/tmp/crashpad \
-  --kiosk 'https://pocketoption.com/login'" &
+  --kiosk 'https://pocketoption.com/login' &
 echo "✅ Chrome launched!"
 echo "📊 Access VNC interface: http://localhost:6080"
 
