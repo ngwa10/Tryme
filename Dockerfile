@@ -18,7 +18,7 @@ RUN apt-get update && \
   python3-tk python3-dev dbus && \
   apt-get clean
 
-# Locale fix
+# Locale fix no
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
@@ -102,7 +102,8 @@ ENV XAUTHORITY=/home/dockuser/.Xauthority
 ENV HOME=/home/dockuser
 ENV PYTHONUNBUFFERED=1
 
-# Switch to non-root user
+# --- THIS IS CRITICAL --- #
+# Switch to non-root user for everything that follows!
 USER dockuser
 
 # Start your bot
