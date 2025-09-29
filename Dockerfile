@@ -31,7 +31,8 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   apt-get install -y google-chrome-stable
 
 # --- FIXED SECTION: Register Chrome as default browser for XFCE and user ---
-RUN cp /usr/share/applications/google-chrome.desktop /home/dockuser/.local/share/applications/ && \
+RUN mkdir -p /home/dockuser/.local/share/applications/ && \
+    cp /usr/share/applications/google-chrome.desktop /home/dockuser/.local/share/applications/ && \
     chown dockuser:dockuser /home/dockuser/.local/share/applications/google-chrome.desktop
 
 RUN mkdir -p /home/dockuser/.config/xfce4/ && \
