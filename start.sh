@@ -4,6 +4,9 @@ set -e
 echo "🚀 Starting Pocket Option Trading Bot Container..."
 echo "Current user: $(whoami)"
 
+export DISPLAY=:1
+export XAUTHORITY=/home/dockuser/.Xauthority
+
 # Create necessary directories
 mkdir -p /home/dockuser/.vnc /home/dockuser/chrome-profile /home/dockuser/.local/share/applications /tmp /run/dbus /tmp/crashpad
 chmod 700 /home/dockuser/.vnc
@@ -24,12 +27,21 @@ chmod +x /home/dockuser/.vnc/xstartup
 # Set up X11 environment
 touch /home/dockuser/.Xauthority
 chown dockuser:dockuser /home/dockuser/.Xauthority
-export XAUTHORITY=/home/dockuser/.Xauthority
-export DISPLAY=:1
+
+# Start DBus daemon for Chrome if needed
+dbus-daemon --system --fork
 
 echo "🖥️  Starting VNC server..."
 vncserver :1 -geometry 1280x800 -depth 24 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE
 sleep 3
+
+# Wait for X to be ready
+for i in {1..10}; do
+  if xdpyinfo -display $DISPLAY >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
 
 echo "🌐 Starting noVNC web interface..."
 cd /opt/noVNC
