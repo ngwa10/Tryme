@@ -30,7 +30,17 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   apt-get update && \
   apt-get install -y google-chrome-stable
 
-# Register Chrome as default browser
+# --- FIXED SECTION: Register Chrome as default browser for XFCE and user ---
+RUN cp /usr/share/applications/google-chrome.desktop /home/dockuser/.local/share/applications/ && \
+    chown dockuser:dockuser /home/dockuser/.local/share/applications/google-chrome.desktop
+
+RUN mkdir -p /home/dockuser/.config/xfce4/ && \
+    echo "[Internet]" > /home/dockuser/.config/xfce4/helpers.rc && \
+    echo "WebBrowser=google-chrome.desktop" >> /home/dockuser/.config/xfce4/helpers.rc && \
+    chown -R dockuser:dockuser /home/dockuser/.config/xfce4
+
+RUN update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/google-chrome-stable 200
+
 RUN mkdir -p /etc/xdg/xfce4/helpers && \
   echo "WebBrowser=google-chrome.desktop" > /etc/xdg/xfce4/helpers.rc && \
   mkdir -p /home/dockuser/.local/share/applications && \
@@ -65,31 +75,31 @@ RUN useradd -m -s /bin/bash dockuser && \
 
 WORKDIR /home/dockuser
 
-# ✅ 1. Create directories and set permissions
+# Create directories and set permissions
 RUN mkdir -p /home/dockuser/bot /home/dockuser/.vnc /home/dockuser/chrome-profile /tmp && \
     chown -R dockuser:dockuser /home/dockuser /tmp
 
-# ✅ 2. Copy your bot files (make sure they exist in the build context)
+# Copy your bot files (make sure they exist in the build context)
 COPY --chown=dockuser:dockuser core.py selenium_integration.py telegram_integration.py healthcheck.sh start.sh requirements.txt /home/dockuser/bot/
 
-# ✅ 3. Make startup scripts executable
+# Make startup scripts executable
 RUN chmod +x /home/dockuser/bot/healthcheck.sh /home/dockuser/bot/start.sh
 
-# ✅ 4. Install Python dependencies
+# Install Python dependencies
 RUN python3 -m pip install --upgrade pip && \
     pip3 install --no-cache-dir -r /home/dockuser/bot/requirements.txt
 
-# ✅ 5. Expose ports for noVNC (web UI) and healthcheck
+# Expose ports for noVNC (web UI) and healthcheck
 EXPOSE 6080 6081
 
-# ✅ 6. Environment variables
+# Environment variables
 ENV DISPLAY=:1
 ENV XAUTHORITY=/home/dockuser/.Xauthority
 ENV HOME=/home/dockuser
 ENV PYTHONUNBUFFERED=1
 
-# ✅ 7. Switch to non-root user
+# Switch to non-root user
 USER dockuser
 
-# ✅ 8. Start your bot
+# Start your bot
 ENTRYPOINT ["/home/dockuser/bot/start.sh"]
