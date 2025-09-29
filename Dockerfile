@@ -15,7 +15,7 @@ RUN apt-get update && \
   supervisor net-tools lsof procps \
   xfonts-base xfonts-scalable xfonts-100dpi xfonts-75dpi \
   python3-tk python3-dev dbus \
-  chromium-browser && \
+  chromium && \
   apt-get clean
 
 # Locale fix
@@ -24,7 +24,7 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-# Create non-root user (optional, you can run as root if you want with Chromium)
+# Create non-root user (recommended for Chromium/GUI apps)
 RUN useradd -m -s /bin/bash dockuser && \
   echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -60,8 +60,7 @@ ENV XAUTHORITY=/home/dockuser/.Xauthority
 ENV HOME=/home/dockuser
 ENV PYTHONUNBUFFERED=1
 
-# You can run as root (default) or switch to dockuser.
-# Uncomment the next line to run as dockuser:
-# USER dockuser
+# Run as dockuser for security and compatibility
+USER dockuser
 
 ENTRYPOINT ["/home/dockuser/bot/start.sh"]
