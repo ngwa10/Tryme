@@ -30,8 +30,6 @@ RUN wget -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-sta
 # Install noVNC
 RUN git clone https://github.com/novnc/noVNC.git /opt/noVNC
 
-# Copy your bot code (make sure to have bot/core.py in your build context)
-COPY bot /home/dockuser/bot
 
 # Copy start.sh script
 COPY start.sh /start.sh
