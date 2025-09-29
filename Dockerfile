@@ -1,10 +1,9 @@
-FROM ubuntu:22.04
+FROM python:3.12-slim
 
 # Install system dependencies, XFCE desktop, VNC, Chromium, etc.
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive \
   apt-get install -y --no-install-recommends \
-  python3 python3-pip python3-setuptools python3-venv \
   xvfb xfce4 xfce4-session xterm dbus-x11 x11-xkb-utils x11-utils \
   tigervnc-standalone-server tigervnc-common \
   wget curl ca-certificates git locales unzip xauth gnupg \
@@ -49,8 +48,8 @@ COPY --chown=dockuser:dockuser core.py selenium_integration.py telegram_integrat
 RUN chmod +x /home/dockuser/bot/healthcheck.sh /home/dockuser/bot/start.sh
 
 # Install Python dependencies
-RUN python3 -m pip install --upgrade pip && \
-    pip3 install --no-cache-dir -r /home/dockuser/bot/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r /home/dockuser/bot/requirements.txt
 
 # Expose ports for noVNC (web UI) and healthcheck
 EXPOSE 6080 6081
