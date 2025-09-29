@@ -30,7 +30,11 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   apt-get update && \
   apt-get install -y google-chrome-stable
 
-# --- FIXED SECTION: Register Chrome as default browser for XFCE and user ---
+# Create non-root user
+RUN useradd -m -s /bin/bash dockuser && \
+  echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Now do user-specific setup
 RUN mkdir -p /home/dockuser/.local/share/applications/ && \
     cp /usr/share/applications/google-chrome.desktop /home/dockuser/.local/share/applications/ && \
     chown dockuser:dockuser /home/dockuser/.local/share/applications/google-chrome.desktop
@@ -69,10 +73,6 @@ RUN which google-chrome-stable && google-chrome-stable --version && chromedriver
 # Install noVNC
 RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
   git clone --depth 1 https://github.com/novnc/websockify.git /opt/noVNC/utils/websockify
-
-# Create non-root user
-RUN useradd -m -s /bin/bash dockuser && \
-  echo "dockuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 WORKDIR /home/dockuser
 
